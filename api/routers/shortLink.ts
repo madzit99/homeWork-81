@@ -14,7 +14,7 @@ ShortLinkRouter.get("/", async (req, res) => {
   }
 });
 
-ShortLinkRouter.get("/:shortUrl", async (req, res) => {
+ShortLinkRouter.get("/:shortUrl", async (req, res, next) => {
   try {
     const product = await Shorter.findOne({ shortUrl: req.params.shortUrl });
     if (product) {
@@ -23,7 +23,22 @@ ShortLinkRouter.get("/:shortUrl", async (req, res) => {
       res.status(404).send("Короткий URL не найден");
     }
   } catch (e) {
-    console.error(e);
+    return next(e);
+  }
+});
+
+ShortLinkRouter.post("/links", async (req, res, next) => {
+  try {
+    const linkData: linkModel = {
+      originalUrl: req.body.url,
+      shortUrl: crypto.randomBytes(3).toString("hex"),
+    };
+
+    const link = new Shorter(linkData);
+    await link.save();
+    res.send(link);
+  } catch (e) {
+    return next(e);
   }
 });
 
